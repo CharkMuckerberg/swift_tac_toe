@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift-lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift_tac_toe}",
+            "name": "Debug swift_tac_toe",
+            "program": "${workspaceFolder:swift_tac_toe}/.build/debug/swift_tac_toe",
+            "preLaunchTask": "swift: Build Debug swift_tac_toe"
+        },
+        {
+            "type": "swift-lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift_tac_toe}",
+            "name": "Release swift_tac_toe",
+            "program": "${workspaceFolder:swift_tac_toe}/.build/release/swift_tac_toe",
+            "preLaunchTask": "swift: Build Release swift_tac_toe"
+        }
+    ]
+}
