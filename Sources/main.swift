@@ -1,10 +1,23 @@
+import Foundation
 // CLI for playing tic tac toe
 @main
 struct SwiftTacToe {
     static func main() {
-        print("Swift Tac Toe")
+        printCentered("Swift Tac Toe", ANSIColor.magenta)
         gameLoop()
     }
+}
+
+enum ANSIColor: String {
+    case black = "\u{001B}[0;30m"
+    case red = "\u{001B}[0;31m"
+    case green = "\u{001B}[0;32m"
+    case yellow = "\u{001B}[0;33m"
+    case blue = "\u{001B}[0;34m"
+    case magenta = "\u{001B}[0;35m"
+    case cyan = "\u{001B}[0;36m"
+    case white = "\u{001B}[0;37m"
+    case reset = "\u{001B}[0;0m"
 }
 
 typealias Board = [[String]]
@@ -55,6 +68,12 @@ func getMove(player: Player, board: Board) -> (x: Int, y: Int) {
             print("Coordinate values must be between 1 and 3 (ex. 1,3)")
             continue
         }
+
+        guard board[y - 1][x - 1] == " " else {
+            print("That spot is already taken!")
+            continue
+        }
+
         return (x - 1, y - 1) // subtract 1 from captured coordinates to make them zero indexed
     }
 }
@@ -66,7 +85,40 @@ func makeMove(board: Board, p: Player, x: Int, y: Int) -> Board {
 }
 
 func determineWinner(board: Board) -> Player? {
-    return Player.player1
+    /// Converts tile to player
+    func getPlayer(tile: String) -> Player? {
+        switch tile {
+            case "X":
+                Player.player1
+            case "O":
+                Player.player2
+            default:
+                nil
+        }
+    }
+
+    // Check horizontal
+    for row in board {
+        if row[0] != " " && row[0] == row[1] && row[1] == row[2] {
+            return getPlayer(tile: row[0])
+        }
+    }
+
+    //check vertical
+    for col in 0...2 {
+        if board[col][0] != " " && board[col][0] == board[col][1] && board[col][1] == board[col][2] {
+            return getPlayer(tile: board[col][0])
+        }
+    }
+
+    // check diagonal
+    if board[0][0] != " " && board[0][0] == board[1][1] && board[1][1] == board[2][2] {
+        return getPlayer(tile: board[0][0])
+    } else if board[0][2] != " " && board[0][2] == board[1][1] && board[1][1] == board[2][0] {
+        return getPlayer(tile: board[0][2])
+    }
+
+    return nil
 }
 
 func isDraw(board: Board) -> Bool {
@@ -84,6 +136,36 @@ func nextPlayersTurn(currentPlayer: Player) -> Player {
     return Player.player2
 }
 
+func printCentered(_ text: String, _ color: ANSIColor? = nil) {
+    // Get the terminal width
+    var w = winsize()
+    if ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 {
+        let terminalWidth = Int(w.ws_col)
+        
+        // Calculate padding
+        let padding = max(0, (terminalWidth - text.count) / 2)
+        
+        // Create centered string
+        var centeredText = String(repeating: " ", count: padding) + text
+        
+        // Apply color if specified
+        if let color = color {
+            centeredText = color.rawValue + centeredText + ANSIColor.reset.rawValue
+        }
+        
+        // Print the centered text
+        print(centeredText)
+    } else {
+        // Fallback if unable to get terminal width
+        print(text)
+    }
+}
+
+func clearTerminal() {
+    print("\u{001B}[2J\u{001B}[H", terminator: "")
+}
+
+
 func gameLoop() {
     // Initial state of the game, player1 starts
     var board = newBoard()
@@ -91,7 +173,7 @@ func gameLoop() {
     var winner: Player?
     var draw: Bool = false
 
-    while winner == nil || !draw {
+    while winner == nil && !draw {
         print("Player \(player.rawValue)'s turn")
         printBoard(board: board)
 
@@ -102,10 +184,14 @@ func gameLoop() {
 
         draw = isDraw(board: board)
         winner = determineWinner(board: board)
+        clearTerminal()
     }
+    
     if draw {
+        printBoard(board: board)
         print("It's a draw!")
     } else {
+        printBoard(board: board)
         print("\(winner?.rawValue ?? "nobody") wins!")
     }
 }
